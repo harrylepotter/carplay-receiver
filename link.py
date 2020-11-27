@@ -60,6 +60,10 @@ class Connection:
         """Handle exception on dongle read thread [called from another thread]"""
         self._run = False
 
+    def _threaderror(self, error):
+        print(f"Error with thread: {error}")
+        self.on_error(error)
+        
     def _read_thread(self):
         while self._run:
             try:

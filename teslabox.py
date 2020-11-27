@@ -4,13 +4,15 @@
 # Created by Colin Munro, December 2019
 # See README.md for more information
 
-"""Implementation to stream PNGs over a webpage that responds with touches that are relayed back to the dongle for Tesla experimental purposes."""
+"""Implementation to stream PNGs over a webpage that rsponds with touches that are relayed back to the dongle for Tesla experimental purposes."""
 import decoder
 import server
 import link
 import protocol
 from threading import Thread
 import time
+import queue
+import os
 
 class Teslabox:
     class _Server(server.Server):
@@ -47,13 +49,32 @@ class Teslabox:
         def __init__(self, owner):
             super().__init__()
             self._owner = owner
+            self._owner.av_queue = queue.Queue()
+            self.fifo_path = "mypipe2"
+            # os.mkfifo(self.fifo_path, 0o600)
+            self._owner.audio_fd = os.open(self.fifo_path, os.O_RDWR | os.O_NONBLOCK)
+            self.put_thread = Thread(target=self._put_thread, args=[self._owner])
+            self.put_thread.start()
+        def _put_thread(self, owner):
+            self._owner = owner
+            while True:
+                while self._owner.av_queue.qsize():
+                    message = self._owner.av_queue.get()                
+                    if isinstance(message, protocol.VideoData):
+                        self._owner.decoder.send(message.data)
+                    elif isinstance(message, protocol.AudioData):
+                        try:
+                            os.write(self._owner.audio_fd, message.data)
+                        except Exception as e:
+                            print(f"exception: {e}")
         def on_message(self, message):
             if isinstance(message, protocol.Open):
                 if not self._owner.started:
                     self._owner._connected()
                     self.send_multiple(protocol.opened_info)
-            elif isinstance(message, protocol.VideoData):
-                self._owner.decoder.send(message.data)
+            else:
+                self._owner.av_queue.put(message);
+                
         def on_error(self, error):
             self._owner._disconnect()
     def __init__(self):

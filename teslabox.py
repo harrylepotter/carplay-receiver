@@ -20,8 +20,11 @@ class Teslabox:
         def __init__(self, owner):
             super().__init__()
             self._owner = owner
-        def on_frame(self, png):
-            self._owner._frame = png
+        def on_key_event(self, event):
+            print(f'Got a key event: {event}')
+            self._owner.connection.send_key_event(event)
+            if event == decoder.KeyEvent.BUTTON_SELECT_DOWN:
+                self._owner.connection.send_key_event(decoder.KeyEvent.BUTTON_SELECT_UP)
     class _AudioDecoder(audiodecoder.AudioDecoder):
         def __init__(self, owner):
             super().__init__()

@@ -9,6 +9,7 @@ import usb.core
 import usb.util
 import threading
 import protocol
+import struct
 
 class Connection:
     idVendor = 0x1314
@@ -47,6 +48,12 @@ class Connection:
     def send_multiple(self, messages):
         for x in messages:
             self.send_message(x)
+
+    def send_key_event(self, event):
+        keys = protocol.CarPlay()
+        val = struct.pack("<L",event)
+        keys._setdata(val)            
+        self.send_message(keys)
 
     def stop(self):
         self._run = False

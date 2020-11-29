@@ -4,7 +4,7 @@
 # Created by Colin Munro, December 2019
 # See README.md for more information
 
-"""Implementation to stream PNGs over a webpage that rsponds with touches that are relayed back to the dongle for Tesla experimental purposes."""
+"""Implementation of electric-monk's pycarplay for use with head-units"""
 import decoder
 import audiodecoder
 import link
@@ -15,7 +15,7 @@ import queue
 import os
 import struct
 
-class Teslabox:
+class CarPlayReceiver:
     class _Decoder(decoder.Decoder):
         def __init__(self, owner):
             super().__init__()
@@ -121,4 +121,4 @@ class Teslabox:
                 time.sleep(1)
 
 if __name__ == "__main__":
-    Teslabox().run()
+    CarPlayReceiver().run()
